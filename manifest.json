@@ -15,5 +15,17 @@
     "multiplayer",
     "hysteria2"
   ],
-  "versions": []
+  "versions": [
+    {
+      "version": "1.0.0",
+      "pclCoreVersion": "2026.07.3",
+      "downloads": {
+        "anycpu": {
+          "packageUrl": "https://github.com/xjh2009/hysteria-link/releases/download/v1.0.0/xjh2009.hysteria.link-1.0.0-anycpu.pclx",
+          "sha256": "603048249bad0fdafe783fd3395b3f822260682443a68e464ca6da5a4e8dda95"
+        }
+      },
+      "releaseNotes": "https://github.com/xjh2009/hysteria-link/releases/tag/v1.0.0"
+    }
+  ]
 }
