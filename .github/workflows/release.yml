@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    env:
+      PLUGIN_ID: xjh2009.hysteria.link
+      PCL_SDK_VERSION: "2026.07.3"
+      PCL_CORE_VERSION: "2026.07.3"
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v6
+        with:
+          path: PCLNexOther/Hysteria2Link.Plugin
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download PCL SDK
+        shell: pwsh
+        working-directory: PCLNexOther/Hysteria2Link.Plugin
+        run: |
+          $sdkVersion = $env:PCL_SDK_VERSION
+          $sdkDir = Join-Path (Resolve-Path .) "sdk\$sdkVersion\x64"
+          New-Item -ItemType Directory -Force -Path $sdkDir | Out-Null
+          $exePath = Join-Path (Resolve-Path .) "sdk\PCL2_Nex_Release_x64.exe"
+          $exeUrl = "https://github.com/PCL-Nex-Developer/PCL2-Nex/releases/download/v$sdkVersion/PCL2_Nex_Release_x64.exe"
+          Invoke-WebRequest -Uri $exeUrl -OutFile $exePath
+          & .\scripts\Extract-BundleFile.ps1 -AppHost $exePath -FileName 'PCL.Core.dll' -OutputPath (Join-Path $sdkDir 'PCL.Core.dll')
+          & .\scripts\Extract-BundleFile.ps1 -AppHost $exePath -FileName 'Plain Craft Launcher 2.dll' -OutputPath (Join-Path $sdkDir 'Plain Craft Launcher 2.dll')
+          Remove-Item -LiteralPath $exePath -Force
+          "PCL_SDK_ROOT=$sdkDir" >> $env:GITHUB_ENV
+
+      - name: Build, test and package plugin
+        shell: pwsh
+        working-directory: PCLNexOther/Hysteria2Link.Plugin
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          .\scripts\pack.ps1 -Version $version -PclCoreVersion $env:PCL_CORE_VERSION -PclSdkRoot $env:PCL_SDK_ROOT
+          $packageName = "xjh2009.hysteria.link-$version-anycpu.pclx"
+          $packagePath = Join-Path (Resolve-Path .\artifacts) $packageName
+          $sha256 = (Get-FileHash -LiteralPath $packagePath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "PACKAGE_NAME=$packageName" >> $env:GITHUB_ENV
+          "PACKAGE_SHA256=$sha256" >> $env:GITHUB_ENV
+          "PACKAGE_URL=https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$packageName" >> $env:GITHUB_ENV
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2.5.0
+        with:
+          files: PCLNexOther/Hysteria2Link.Plugin/artifacts/${{ env.PACKAGE_NAME }}
+          generate_release_notes: true
+
+      - name: Update manifest
+        shell: pwsh
+        working-directory: PCLNexOther/Hysteria2Link.Plugin
+        run: |
+          git fetch origin main
+          git checkout -B release-metadata origin/main
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $manifest = Get-Content -LiteralPath manifest.json -Raw | ConvertFrom-Json
+          if ($null -eq $manifest.versions) {
+            $manifest | Add-Member -MemberType NoteProperty -Name versions -Value @()
+          }
+          $entry = [ordered]@{
+            version = $version
+            pclCoreVersion = $env:PCL_CORE_VERSION
+            downloads = [ordered]@{
+              anycpu = [ordered]@{
+                packageUrl = $env:PACKAGE_URL
+                sha256 = $env:PACKAGE_SHA256
+              }
+            }
+            releaseNotes = "https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          }
+          $existing = @($manifest.versions | Where-Object { $_.version -ne $version })
+          $manifest.versions = @($entry) + $existing
+          $manifestContent = ($manifest | ConvertTo-Json -Depth 20) + [Environment]::NewLine
+          [IO.File]::WriteAllText((Resolve-Path manifest.json), $manifestContent, [Text.UTF8Encoding]::new($false))
+
+          $pluginJson = Get-Content -LiteralPath plugin.json -Raw | ConvertFrom-Json
+          $pluginJson.version = $version
+          $pluginJson.pclCoreVersion = $env:PCL_CORE_VERSION
+          $pluginJsonContent = ($pluginJson | ConvertTo-Json -Depth 20) + [Environment]::NewLine
+          [IO.File]::WriteAllText((Resolve-Path plugin.json), $pluginJsonContent, [Text.UTF8Encoding]::new($false))
+
+      - name: Commit release metadata
+        shell: pwsh
+        working-directory: PCLNexOther/Hysteria2Link.Plugin
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json plugin.json
+          if (git diff --cached --quiet) {
+            Write-Host "Release metadata is already up to date."
+            exit 0
+          }
+          git commit -m "chore: update manifest for ${{ github.ref_name }}"
+          git push origin HEAD:main

@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>PCL.Hysteria2LinkPlugin</AssemblyName>
+    <RootNamespace>Hysteria2Link.Plugin</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8604;CS8618;CS8622;CS8625</NoWarn>
+    <PluginVersion Condition="'$(PluginVersion)' == ''">1.0.0.0</PluginVersion>
+    <PclCoreVersion Condition="'$(PclCoreVersion)' == ''">2026.07.2</PclCoreVersion>
+    <PclSdkRoot Condition="'$(PclSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\..\..\sdk\2026.07.2\x64</PclSdkRoot>
+    <PclCorePath Condition="'$(PclCorePath)' == ''">$(PclSdkRoot)\PCL.Core.dll</PclCorePath>
+    <PclMainPath Condition="'$(PclMainPath)' == ''">$(PclSdkRoot)\Plain Craft Launcher 2.dll</PclMainPath>
+    <AssemblyVersion>$(PluginVersion)</AssemblyVersion>
+    <FileVersion>$(PluginVersion)</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="PCL.Core">
+      <HintPath>$(PclCorePath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Plain Craft Launcher 2">
+      <HintPath>$(PclMainPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="FluentValidation" Version="12.1.1"
+                      PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="System.Text.Json" Version="10.0.3"
+                      PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.3"
+                      PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="PublishPlugin" DependsOnTargets="Build">
+    <PropertyGroup>
+      <PluginPackageDir Condition="'$(PluginPackageDir)' == ''">$(MSBuildProjectDirectory)\..\..\artifacts\xjh2009.hysteria.link</PluginPackageDir>
+      <PluginLibDir>$(PluginPackageDir)\lib\</PluginLibDir>
+      <PluginMixinDir>$(PluginPackageDir)\mixins\</PluginMixinDir>
+    </PropertyGroup>
+    <RemoveDir Directories="$(PluginPackageDir)" />
+    <MakeDir Directories="$(PluginLibDir);$(PluginMixinDir)" />
+    <ItemGroup>
+      <PluginPackageFiles Include="$(TargetDir)$(TargetFileName)" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PluginPackageFiles)" DestinationFolder="$(PluginLibDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\plugin.json" DestinationFolder="$(PluginPackageDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\README.md" DestinationFolder="$(PluginPackageDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\LICENSE" DestinationFolder="$(PluginPackageDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\mixins\xjh2009.hysteria.link.mixins.json" DestinationFolder="$(PluginMixinDir)" />
+  </Target>
+</Project>

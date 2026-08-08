@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="AnyCPU" />
+  </Configurations>
+  <Project Path="src/Hysteria2Link.Plugin/Hysteria2Link.Plugin.csproj" Type="C#" />
+  <Project Path="tests/Hysteria2Link.Smoke/Hysteria2Link.Smoke.csproj" Type="C#" />
+</Solution>

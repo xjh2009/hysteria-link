@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "Hysteria2Link.Plugin.Mixins",
+  "mixins": [
+    "PageToolsLeftMixin"
+  ],
+  "priority": 900,
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

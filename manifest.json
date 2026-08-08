@@ -1,0 +1,19 @@
+{
+  "id": "xjh2009.hysteria.link",
+  "name": "Hysteria2 Realms 联机",
+  "author": {
+    "githubLogin": "xjh2009",
+    "displayName": "XJH"
+  },
+  "description": "使用 Hysteria2 Realms 的 UDP 打洞能力直连 Minecraft Java 版局域网世界。",
+  "readmeUrl": "README.md",
+  "repository": "https://github.com/xjh2009/hysteria-link",
+  "homepageUrl": "https://github.com/xjh2009/hysteria-link",
+  "group": "联机",
+  "tags": [
+    "minecraft",
+    "multiplayer",
+    "hysteria2"
+  ],
+  "versions": []
+}

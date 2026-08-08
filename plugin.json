@@ -1,0 +1,14 @@
+{
+  "id": "xjh2009.hysteria.link",
+  "name": "Hysteria2 Realms 联机",
+  "version": "1.0.0",
+  "author": "XJH",
+  "description": "使用 Hysteria2 Realms 的 UDP 打洞能力直连 Minecraft Java 版局域网世界。",
+  "readmeUrl": "README.md",
+  "pclCoreVersion": "2026.07.2",
+  "entryAssembly": "lib/PCL.Hysteria2LinkPlugin.dll",
+  "mixinConfigs": [
+    "mixins/xjh2009.hysteria.link.mixins.json"
+  ],
+  "license": "MPL-2.0"
+}
